@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang = "en">
+    <head>
+        <meta charset = "UTF-8"/>
+        <title> ASCII Art Converter</title>
+        <style>
+            body {
+                font-family: sans-serif;
+                max-width: 900px;
+                margin: 40px auto;
+                padding: 20px;
+                text-align: center;
+                background: #1a1a2e;
+                color: #eee;
+            }
+            h1 {
+                color: #e94560;
+                margin-bottom: 20px;
+            }
+            input, button {
+                margin: 8px 4px;
+            }
+            input[type="number"] {
+                background: #16213e;
+                color: #eee;
+                border: 1px solid #444;
+                border-radius: 4px;
+                padding: 4px 8px;
+            }
+            button {
+                background: #e94560;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 6px 16px;
+                cursor: pointer;
+            }
+            button:hover {
+                background: #c73652;
+            }
+            #loading {
+                color: #e94560;
+            }
+            pre {
+                background: #111;
+                color: #0f0;
+                padding: 16px;
+                overflow: auto;
+                font-size: 8px;
+                line-height: 1;
+            }
+            input, button {
+                margin: 8px 4px;
+            }
+        </style> 
+    </head>
+    <body>
+        <h1>ASCII Art Converter</h1>
+        <input type = "file" id = "imageInput" accept = "image/*"/>
+        <label>
+            <input type="checkbox" id="invertToggle" /> Invert
+        </label>
+        <label> 
+            Width: <input type = "number" id = "widthInput" value = "100" min = "10" max = "500"/>
+        </label>
+        <button onclick = "convert()" >Convert</button>
+        <button onclick = "copyArt()" >Copy</button>
+        <button onclick = "downloadArt()" >Download.txt</button>
+        <p id = "loading" style = "display:none;">Converting...</p>
+        <pre id = "output"> Your ASCII art will appear here </pre>
+
+        <script>
+            async function convert() {
+                const file = document.getElementById("imageInput").files[0];
+                const width = document.getElementById("widthInput").value;
+                if (!file) { alert("Please select an image."); return; }
+                document.getElementById("loading").style.display = "block";
+                const formData = new FormData();
+                formData.append("image", file);
+                formData.append("width", width);
+                formData.append("invert", document.getElementById("invertToggle").checked);
+                const res = await fetch("http://127.0.0.1:5001/convert", { method: "POST", body: formData });
+                const data = await res.json();
+                document.getElementById("output").textContent = data.ascii_art;
+                document.getElementById("loading").style.display = "none";
+            }
+            function copyArt() {
+                const text = document.getElementById("output").textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    alert("ASCII art copied to clipboard!");
+                }).catch(err => {
+                    alert("Failed to copy: " + err);
+                });
+            }
+
+            function downloadArt() {
+                const art = document.getElementById("output").textContent;
+                const blob = new Blob([art], { type: "text/plain" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "ascii_art.txt";
+                a.click();
+            }
+        </script>
+    </body>
+</html>
