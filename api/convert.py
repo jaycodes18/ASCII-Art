@@ -1,7 +1,10 @@
-from flask import request, jsonify
-from PIL import Image
+from flask import Flask, request, jsonify
 from flask_cors import CORS
+from PIL import Image
 import io
+
+app = Flask(__name__)
+CORS(app)
 
 ASCII_CHARS = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
 
@@ -20,8 +23,9 @@ def image_to_ascii(image_bytes, width=100, invert=False):
             ascii_str += "\n"
     return ascii_str
 
-def handler(request):
-    if request.method == "POST":
+@app.route("/api/convert", methods=["POST"])
+def convert():
+    try:
         file = request.files.get("image")
         if not file:
             return jsonify({"error": "No image uploaded"}), 400
@@ -29,3 +33,5 @@ def handler(request):
         invert = request.form.get("invert") == "true"
         result = image_to_ascii(file.read(), width, invert)
         return jsonify({"ascii_art": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
