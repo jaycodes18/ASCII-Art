@@ -48,11 +48,11 @@
                 overflow: auto;
                 font-size: 8px;
                 line-height: 1;
-            }
+            } 
             input, button {
                 margin: 8px 4px;
             }
-        </style> 
+        </style>
     </head>
     <body>
         <h1>ASCII Art Converter</h1>
@@ -75,14 +75,26 @@
                 const width = document.getElementById("widthInput").value;
                 if (!file) { alert("Please select an image."); return; }
                 document.getElementById("loading").style.display = "block";
-                const formData = new FormData();
-                formData.append("image", file);
-                formData.append("width", width);
-                formData.append("invert", document.getElementById("invertToggle").checked);
-                const res = await fetch("http://127.0.0.1:5001/convert", { method: "POST", body: formData });
-                const data = await res.json();
-                document.getElementById("output").textContent = data.ascii_art;
-                document.getElementById("loading").style.display = "none";
+                document.getElementById("output").textContent = "";
+                try {
+                    const formData = new FormData();
+                    formData.append("image", file);
+                    formData.append("width", width);
+                    formData.append("invert", document.getElementById("invertToggle").checked);
+                    const res = await fetch("/api/convert", { method: "POST", body: formData });
+                    const text = await res.text();
+                    let data;
+                    try { data = JSON.parse(text); } catch(e) {
+                        throw new Error("Server returned non-JSON (status " + res.status + "): " + text.slice(0, 300));
+                    }
+                    if (data.error) throw new Error("Server error: " + data.error);
+                    document.getElementById("output").textContent = data.ascii_art;
+                } catch (err) {
+                    document.getElementById("output").textContent = "Error: " + err.message;
+                    alert("Conversion failed: " + err.message);
+                } finally {
+                    document.getElementById("loading").style.display = "none";
+                }
             }
             function copyArt() {
                 const text = document.getElementById("output").textContent;
