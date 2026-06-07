@@ -23,7 +23,7 @@ def image_to_ascii(image_bytes, width=100, invert=False):
             ascii_str += "\n"
     return ascii_str
 
-@app.route("/api/convert", methods=["POST"])
+@app.route("/", methods=["POST"])
 def convert():
     try:
         file = request.files.get("image")
